@@ -1,0 +1,38 @@
+.pane {  
+  background-color: rgb(51,51,51);
+  color: white;  
+}
+
+.container{
+  background-color: rgb(39,39,39);
+}
+
+#puzzle-board{
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 450px;
+    height: 600px;
+}
+
+#puzzle-board-header{
+  height: 150px;
+}
+
+#puzzle-board-pieces{
+  height: 450px;
+}
+
+.puzzle-piece{
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  float:left;  
+  position: relative;
+  height: 56px;
+  width: 56px;
+}
+
+    
