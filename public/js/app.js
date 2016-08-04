@@ -56,11 +56,11 @@ angular.module('starter', ['ionic'])
       $.when($(this).animate({
         top: toPos.top,
         left: toPos.left
-      }, 600),
+      }, 300),
         $(to).animate({
           top: thisPos.top,
           left: thisPos.left
-        }, 600)).done(function () {
+        }, 300)).done(function () {
           animating = false;
         });
 
@@ -86,7 +86,7 @@ angular.module('starter', ['ionic'])
             selectedPiece = $(this);
           });
           $(piece).mouseenter(function () {
-            if (selectedPiece && piecesTouch(selectedPiece, $(this), pieceSize)) {
+            if (selectedPiece && doPiecesTouch(selectedPiece, $(this), pieceSize)) {
               selectedPiece.swapWith($(this));
               selectedPiece = undefined;
             }
@@ -98,7 +98,7 @@ angular.module('starter', ['ionic'])
 
   })
 
-  function piecesTouch(piece1, piece2, pieceSize){
+  function doPiecesTouch(piece1, piece2, pieceSize){
     var fromPos = piece1.position();
     var toPos = piece2.position();
     
