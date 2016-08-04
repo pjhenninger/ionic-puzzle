@@ -1,7 +1,7 @@
 "use strict";
-var p = require('./PuzzlePiece');
-var PuzzleBoard = (function () {
-    function PuzzleBoard() {
+const p = require('./PuzzlePiece');
+class PuzzleBoard {
+    constructor() {
         this.PuzzlePieces = [];
         for (var i = 0; i < 8; i++) {
             this.PuzzlePieces[i] = [];
@@ -10,7 +10,9 @@ var PuzzleBoard = (function () {
             }
         }
     }
-    return PuzzleBoard;
-}());
+    toJSON() {
+        return JSON.stringify(this.PuzzlePieces);
+    }
+}
 exports.PuzzleBoard = PuzzleBoard;
 //# sourceMappingURL=PuzzleBoard.js.map

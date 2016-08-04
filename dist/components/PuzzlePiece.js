@@ -9,12 +9,11 @@
     PieceColor[PieceColor["Black"] = 6] = "Black";
 })(exports.PieceColor || (exports.PieceColor = {}));
 var PieceColor = exports.PieceColor;
-var PuzzlePiece = (function () {
-    function PuzzlePiece(color) {
+class PuzzlePiece {
+    constructor(color) {
         this.Color = color;
     }
-    return PuzzlePiece;
-}());
+}
 exports.PuzzlePiece = PuzzlePiece;
 function getRandomColor() {
     var keys = Object.keys(PieceColor), index = Math.floor(Math.random() * (keys.length / 2)), k = keys[index];

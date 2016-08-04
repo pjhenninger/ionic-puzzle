@@ -1,5 +1,5 @@
 "use strict";
-var b = require('./components/PuzzleBoard');
+const b = require('./components/PuzzleBoard');
 module.exports = function (app, io) {
     var chat = io.on('connection', function (socket) {
         socket.on('loadPuzzle', function () {

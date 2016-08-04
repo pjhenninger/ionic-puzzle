@@ -12,4 +12,8 @@ export class PuzzleBoard{
             }
         }
     }
+
+    public toJSON() : string {
+        return JSON.stringify(this.PuzzlePieces);
+    }
 }
