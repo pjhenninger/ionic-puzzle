@@ -9,6 +9,6 @@ app.get('/', function (request, response) {
     response.sendFile(__dirname + "/public/index.html");
 });
 
-app.get('/createPuzzle', function (request, response) {    
+app.get('/api/createPuzzle', function (request, response) {    
     response.send((new puzzleBoard.PuzzleBoard()).toJSON());
 });
