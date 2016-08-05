@@ -15,7 +15,7 @@
 
   <!-- ionic/angularjs js -->
   <script src="lib/ionic/js/ionic.bundle.js"></script>
-  
+
   <!-- cordova script (this will be a 404 during development) -->
   <script src="cordova.js"></script>
 
@@ -25,7 +25,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 </head>
 
-<body ng-app="starter">
+<body ng-app="starter" ng-controller="myCtrl">
 
   <ion-pane>
     <ion-header-bar class="bar-stable">
@@ -35,6 +35,13 @@
       <div class="container" id="puzzle-board-header">
       </div>
       <div class="container" id="puzzle-board-pieces">
+        <div class="piece-row" ng-repeat="row in puzzlePieces">
+          <div draggable="false" ng-repeat="piece in row track by $index" ng-style="getAbsPos($parent.$index, $index)"
+            class="puzzle-piece" id="{{$parent.$index}}|{{$index}}" 
+            ng-mouseenter="pieceMouseEnter()" ng-mousedown="pieceMouseDown()">
+            <img draggable="false" ng-src="img/{{piece.Color}}.png" ng-cloak/>
+          </div>
+        </div>
       </div>
     </div>
     </div>
