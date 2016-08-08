@@ -40,8 +40,7 @@
   float:left;    
   height: 56px;
   width: 56px;
-  -webkit-transition:all 3000ms;
-    transition:all 3000ms;
+  transition: top 1s ease-out, opacity 1s;
 }
 
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {

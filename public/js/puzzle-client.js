@@ -94,50 +94,56 @@ app.controller('myCtrl', function ($scope, $interval, $http) {
         selectedPiece = undefined;
     });
 
-    $scope.pieceMouseDown = function () {
+    $scope.pieceMouseDown = function ($event) {
         // Show start dragged position of image.
-        selectedPiece = $(this);
+        selectedPiece = $($event.target.parentElement);
     }
 
-    $scope.pieceMouseEnter = function () {
-        if (selectedPiece && doPiecesTouch(selectedPiece, $(this), $scope.pieceSize)) {
-            selectedPiece.swapWith($(this), function () {
-                checkForSpecificMatches(selectedPiece, $(this));
+    $scope.pieceMouseEnter = function ($event) {
+        var enteredPiece = $event.target.parentElement;
+        if (selectedPiece && doPiecesTouch(selectedPiece, $(enteredPiece), $scope.pieceSize)) {
+            selectedPiece.swapWith($(enteredPiece), function () {
+                checkForSpecificMatches(selectedPiece, $(enteredPiece));
             });
 
             selectedPiece = undefined;
         }
     }
 
-    $scope.getAbsPos = function (rowIndex, columnIndex) {        
+    $scope.getAbsPos = function (rowIndex, columnIndex) {
         return { "top": (rowIndex * $scope.pieceSize + 'px'),
                  "left": (columnIndex * $scope.pieceSize + 'px') };
     }
 
     jQuery.fn.swapWith = function (to, callback) {
-        var z = $scope.puzzlePieces[0][1];
-        var b = $scope.puzzlePieces[0][0];        
-        $scope.puzzlePieces[0][0] = z;
-        $scope.puzzlePieces[0][1] = b;
-        if (animating) {
-            return;
-        }
-        // animating = true;
-        // thisPos = $(this).position();
-        // toPos = $(to).position();
-        // $.when($(this).animate({
-        //     top: toPos.top,
-        //     left: toPos.left
-        // }, 300),
-        //     $(to).animate({
-        //         top: thisPos.top,
-        //         left: thisPos.left
-        //     }, 300)).done(function () {
-        //         animating = false;
-        //         if (callback) {
-        //             callback();
-        //         }
-        //     });
+    //     var a = $scope.puzzlePieces[0][1];
+    //     var c = $scope.puzzlePieces[0][0];
+    //     $scope.puzzlePieces[0][0] = a;
+    //     $scope.puzzlePieces[0][1] = c;
+    //     $timeout(function(){
+    //   			var tempX = a.xpos;
+	// 					a.xpos = c.xpos;
+	// 					c.xpos = tempX;
+
+    // },10)
+    var a = $scope.puzzlePieces[0][1];
+         var c = $scope.puzzlePieces[1][1];
+        animating = true;
+        thisPos = this.position();
+        toPos = to.position();
+        $.when(this.animate({
+            top: toPos.top,
+            left: toPos.left
+        }, 300),
+            to.animate({
+                top: thisPos.top,
+                left: thisPos.left
+            }, 300)).done(function () {
+                animating = false;
+                if (callback) {
+                    callback();
+                }
+            });
 
 
     };

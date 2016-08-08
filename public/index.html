@@ -15,7 +15,7 @@
 
   <!-- ionic/angularjs js -->
   <script src="lib/ionic/js/ionic.bundle.js"></script>
-
+  
   <!-- cordova script (this will be a 404 during development) -->
   <script src="cordova.js"></script>
 
@@ -38,7 +38,7 @@
         <div class="piece-row" ng-repeat="row in puzzlePieces">
           <div draggable="false" ng-repeat="piece in row track by $index" ng-style="getAbsPos($parent.$index, $index)"
             class="puzzle-piece" id="{{$parent.$index}}|{{$index}}" 
-            ng-mouseenter="pieceMouseEnter()" ng-mousedown="pieceMouseDown()">
+            ng-mouseenter="pieceMouseEnter($event)" ng-mousedown="pieceMouseDown($event)">
             <img draggable="false" ng-src="img/{{piece.Color}}.png" ng-cloak/>
           </div>
         </div>
