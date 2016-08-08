@@ -6,14 +6,16 @@
 angular.module('starter', ['ionic'])
 
 
-    .run(function($ionicPlatform) {
+    .run(function ($ionicPlatform) {
         var board = $("#puzzle-board");
         var puzzlePieces = $("#puzzle-board-pieces");
         var selectedPiece;
+        var swappedPiece;
         var animating = false;
         var pieceSize = 56;
+        var puzzleSize = 8;
 
-        $ionicPlatform.ready(function() {
+        $ionicPlatform.ready(function () {
 
             if (window.cordova && window.cordova.plugins.Keyboard) {
                 // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -33,13 +35,13 @@ angular.module('starter', ['ionic'])
                 url: '/api/createPuzzle',
                 type: 'GET',
                 data: '', // or $('#myform').serializeArray()
-                success: function(data) { loadPuzzle(data) }
+                success: function (data) { loadPuzzle(data) }
             });
-        });        
+        });
 
         function loadPuzzle(colors) {
-            $.each(JSON.parse(colors), function(i) {
-                $.each(this, function(j) {
+            $.each(JSON.parse(colors), function (i) {
+                $.each(this, function (j) {
                     createPuzzlePiece(this.Color, i, j);
                 })
             });
@@ -51,41 +53,109 @@ angular.module('starter', ['ionic'])
             img.draggable = false;
             piece.draggable = false;
             img.src = "img/" + color + ".png";
+            img.id = color;
             piece.style.top = (rowIndex * pieceSize).toString() + "px";
             piece.style.left = (columnIndex * pieceSize).toString() + "px";
             piece.className = "puzzle-piece";
-            piece.id = rowIndex + '|' + columnIndex;
+            piece.id = rowIndex + '-' + columnIndex;
             piece.appendChild(img);
             puzzlePieces.append(piece);
 
-            $(piece).mousedown(function() {
+            $(piece).mousedown(function () {
                 // Show start dragged position of image.
                 selectedPiece = $(this);
             });
-            $(piece).mouseenter(function() {
-                if (selectedPiece && doPiecesTouch(selectedPiece, $(this), pieceSize)) {
-                    selectedPiece.swapWith($(this), function(){
-                      checkForMatches();
-                    });
+            $(piece).mouseenter(function () {
 
-                    selectedPiece = undefined;
+                if (selectedPiece && doPiecesTouch(selectedPiece, $(this), pieceSize)) {
+                    selectedPiece.swapWith($(this), function () {
+                        checkMatches(getPieceObject(selectedPiece), getPieceObject(swappedPiece), function () {
+                            selectedPiece = undefined;
+                            swappedPiece = undefined;
+                            animating = false;
+                        })
+                    });
                 }
             });
         }
 
-        function checkForMatches(){
-          
+        function checkMatches(piece1, piece2, callback) {
+            checkForSpecificMatch(piece1);
+            checkForSpecificMatch(piece2);
+            if (callback) {
+                callback();
+            }
         }
 
-        $(document).mouseup(function() {
-            selectedPiece = undefined;
+        function checkForSpecificMatch(piece) {
+            var rowMatches = [piece];
+            var columnMatches = [piece];
+            for (var i = piece.column - 1; i >= 0; i--) {
+                var checkMatch = getPieceObject($('#' + piece.row + '-' + i));
+                if (checkMatch.color === piece.color) {
+                    rowMatches.push(checkMatch);
+                }
+                else {
+                    break;
+                }
+            }
+            for (var i = piece.column + 1; i < puzzleSize; i++) {
+                var checkMatch = getPieceObject($('#' + piece.row + '-' + i));
+                if (checkMatch.color === piece.color) {
+                    rowMatches.push(checkMatch);
+                }
+                else {
+                    break;
+                }
+            }
+            for (var i = piece.row - 1; i >= 0; i--) {
+                var checkMatch = getPieceObject($('#' + i + '-' + piece.column));
+                if (checkMatch.color === piece.color) {
+                    columnMatches.push(checkMatch);
+                }
+                else {
+                    break;
+                }
+            }
+            for (var i = piece.row + 1; i < puzzleSize; i++) {
+                var checkMatch = getPieceObject($('#' + i + '-' + piece.column));
+                if (checkMatch.color === piece.color) {
+                    columnMatches.push(checkMatch);
+                }
+                else {
+                    break;
+                }
+            }
+
+            if (columnMatches.length > 2) {
+                $.each(columnMatches, function (i) {
+                    $('#' + this.row + '-' + this.column).remove();
+                });
+            }
+            if (rowMatches.length > 2) {
+                $.each(rowMatches, function (i) {
+                    $('#' + this.row + '-' + this.column).remove();
+                });
+            }
+        }
+
+        function checkForAllMatches() {
+
+        }
+
+        $(document).mouseup(function () {
+            if (!animating) {
+                selectedPiece = undefined;
+            }
         });
 
-        puzzlePieces.mouseleave(function() {
-            selectedPiece = undefined;
+        puzzlePieces.mouseleave(function () {
+            if (!animating) {
+                selectedPiece = undefined;
+            }
         });
 
-        jQuery.fn.swapWith = function(to, callback) {          
+        jQuery.fn.swapWith = function (to, callback) {
 
             if (animating) {
                 return;
@@ -100,23 +170,43 @@ angular.module('starter', ['ionic'])
                 $(to).animate({
                     top: thisPos.top,
                     left: thisPos.left
-                }, 300)).done(function() {
-                    animating = false;
-                    if(callback){
-                      callback();                      
-                    }                    
+                }, 300)).done(function () {
+                    tempID = $(this)[0].attr('id');
+                    $(this)[0].attr('id', $(this)[1].attr('id'));
+                    $(this)[1].attr('id', tempID);
+                    if (callback) {
+                        callback();
+                    }
                 });
 
 
         };
+
+        function doPiecesTouch(piece1, piece2, pieceSize) {
+            swappedPiece = piece2;
+
+            var fromPos = piece1.position();
+            var toPos = piece2.position();
+
+            return (toPos.top === fromPos.top || toPos.left === fromPos.left);
+        }
+
+        function getPieceObject(piece) {
+
+            if (piece.length === 0) {
+                return {
+                    row: 9,
+                    column: 9,
+                    color: "Xerox"
+                };
+            }
+            return {
+                row: parseInt(piece.attr('id').split("-")[0]),
+                column: parseInt(piece.attr('id').split("-")[1]),
+                color: piece.find('img').attr('id')
+            };
+        }
     })
-
-function doPiecesTouch(piece1, piece2, pieceSize) {
-    var fromPos = piece1.position();
-    var toPos = piece2.position();
-
-    return (toPos.top === fromPos.top || toPos.left === fromPos.left);
-}
 
 
 
