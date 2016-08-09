@@ -35,6 +35,13 @@ class PuzzleBoard {
         }
         return color;
     }
+    getRandomPieces(count) {
+        var puzzlePieces = [];
+        for (var i = 0; i < count; i++) {
+            puzzlePieces.push(new p.PuzzlePiece(p.getRandomColor()));
+        }
+        return JSON.stringify(puzzlePieces);
+    }
 }
 exports.PuzzleBoard = PuzzleBoard;
 //# sourceMappingURL=PuzzleBoard.js.map

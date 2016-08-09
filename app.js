@@ -12,3 +12,7 @@ app.get('/', function (request, response) {
 app.get('/api/createPuzzle', function (request, response) {    
     response.send((new puzzleBoard.PuzzleBoard()).toJSON());
 });
+
+app.get('/api/getPieces', function (request, response) {    
+    response.send((new puzzleBoard.PuzzleBoard()).getRandomPieces(500));
+});

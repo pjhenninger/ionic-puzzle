@@ -41,4 +41,13 @@ export class PuzzleBoard {
 
         return color;
     }
+
+    public getRandomPieces(count:number): string{
+    var puzzlePieces = [];
+    for(var i = 0; i < count; i++){
+        puzzlePieces.push(new p.PuzzlePiece(p.getRandomColor()));
+    }
+
+    return JSON.stringify(puzzlePieces);
+}
 }

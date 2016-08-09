@@ -14,6 +14,9 @@ angular.module('starter', ['ionic'])
         var animating = false;
         var pieceSize = 56;
         var puzzleSize = 8;
+        var columnMissingPieces = [];
+        var matchMade = false;
+        var storagePieces = [];
 
         $ionicPlatform.ready(function () {
 
@@ -37,7 +40,24 @@ angular.module('starter', ['ionic'])
                 data: '', // or $('#myform').serializeArray()
                 success: function (data) { loadPuzzle(data) }
             });
+
+            getPieces();
         });
+
+        function getPieces() {
+            $.ajax({
+                url: '/api/getPieces',
+                type: 'GET',
+                data: '', // or $('#myform').serializeArray()
+                success: function (data) { loadPieces(data) }
+            });
+        }
+
+        function loadPieces(colors) {
+            $.each(JSON.parse(colors), function (i) {
+                storagePieces.push(this);
+            });
+        }
 
         function loadPuzzle(colors) {
             $.each(JSON.parse(colors), function (i) {
@@ -47,39 +67,114 @@ angular.module('starter', ['ionic'])
             });
         }
 
-        function createPuzzlePiece(color, rowIndex, columnIndex) {
+        function createPuzzlePiece(color, rowIndex, columnIndex, callback) {
             var piece = document.createElement("div");
             var img = document.createElement("img");
             img.draggable = false;
             piece.draggable = false;
             img.src = "img/" + color + ".png";
             img.id = color;
-            piece.style.top = (rowIndex * pieceSize).toString() + "px";
-            piece.style.left = (columnIndex * pieceSize).toString() + "px";
             piece.className = "puzzle-piece";
             piece.id = rowIndex + '-' + columnIndex;
             piece.appendChild(img);
             puzzlePieces.append(piece);
+            piece.style.left = (columnIndex * pieceSize).toString() + "px";
+            piece.style.top = "0px";
+            $.when($(piece).animate({
+                top: $(piece).position().top + (rowIndex * pieceSize)
+            }, 300)).done(function(){
+                if(callback){
+                    callback();
+                }
+            });
 
             $(piece).mousedown(function () {
                 // Show start dragged position of image.
                 selectedPiece = $(this);
             });
             $(piece).mouseenter(function () {
-
+               
                 if (selectedPiece && doPiecesTouch(selectedPiece, $(this), pieceSize)) {
                     selectedPiece.swapWith($(this), function () {
                         checkMatches(getPieceObject(selectedPiece), getPieceObject(swappedPiece), function () {
-                            selectedPiece = undefined;
-                            swappedPiece = undefined;
-                            animating = false;
-                        })
+                            if (matchMade) {
+                                cascade(function () {
+                                    createAndDropPiece(function () {
+                                        checkForAllMatchesAndCascade(function () {
+                                            selectedPiece = undefined;
+                                            swappedPiece = undefined;
+                                            animating = false;
+                                            if (storagePieces.length < 50) {
+                                                getPieces();
+                                            }
+                                        });
+                                    });
+                                });
+                            }
+                            else {
+                                selectedPiece = undefined;
+                                swappedPiece = undefined;
+                                animating = false;
+                            }
+                        });
                     });
                 }
             });
         }
 
+        function createAndDropPiece(callback) {
+            var farthestMissingPiece = 0;
+            for (var i = 0; i < puzzleSize; i++){
+                if(columnMissingPieces[i]){
+                    farthestMissingPiece = i;
+                }
+            }
+
+            for (var i = 0; i < puzzleSize; i++) {
+                var missingPieces = columnMissingPieces[i];
+                if (missingPieces) {
+                    for (var j = missingPieces.count; j > 0; j--) {
+                        var piece = storagePieces[0];
+                        storagePieces.splice(0, 1);
+                        createPuzzlePiece(piece.Color, j - 1, i, function () {
+                            if ($.timers.length === 1 && callback) { // any page animations finished                                                              
+                                callback();
+                            }
+                        });
+                    }
+                    columnMissingPieces[i] = undefined;
+                }
+            }
+        }
+
+        function cascade(callback) {
+            if (matchMade) {
+                for (var i = puzzleSize; i >= 0; i--) {
+                    var missingPieces = columnMissingPieces[i];
+                    if (missingPieces) {
+                        for (var j = puzzleSize; j >= 0; j--) {
+                            var piece = $('#' + j + '-' + i);
+                            if (piece.length > 0 && j < missingPieces.row) {
+                                piece.attr('id', ((j + missingPieces.count) + '-' + i));
+                                $.when(piece.animate({
+                                    top: piece.position().top + (pieceSize * missingPieces.count)
+                                }, 300)).done(function () {
+                                    if ($.timers.length === 1 && callback) {
+                                        callback();
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+                if ($.timers.length === 1 && callback) {
+                    callback();
+                }
+            }
+        }
+
         function checkMatches(piece1, piece2, callback) {
+            matchMade = false;
             checkForSpecificMatch(piece1);
             checkForSpecificMatch(piece2);
             if (callback) {
@@ -129,18 +224,64 @@ angular.module('starter', ['ionic'])
 
             if (columnMatches.length > 2) {
                 $.each(columnMatches, function (i) {
+                    matchMade = true;
+                    addMissingColumnPiece(this.row, this.column);
                     $('#' + this.row + '-' + this.column).remove();
                 });
             }
             if (rowMatches.length > 2) {
                 $.each(rowMatches, function (i) {
+                    matchMade = true;
+                    addMissingColumnPiece(this.row, this.column);
                     $('#' + this.row + '-' + this.column).remove();
                 });
             }
+            //if both matched, don't count original piece twice
+            if (columnMatches.length > 2 && rowMatches.length > 2) {
+                columnMissingPieces[piece.column].count--;
+            }
         }
 
-        function checkForAllMatches() {
+        function addMissingColumnPiece(row, column) {
+            if (!columnMissingPieces[column]) {
+                columnMissingPieces[column] = {
+                    row: row,
+                    count: 1
+                };
+            }
+            else {
+                if (columnMissingPieces[column].row < row) {
+                    columnMissingPieces[column].row = row;
+                }
+                columnMissingPieces[column].count++;
+            }
+        }
 
+        function checkForAllMatches(callback) {
+            matchMade = false;
+            $.each($('.puzzle-piece'), function (i) {
+                checkForSpecificMatch(getPieceObject($(this)));
+            });
+
+            if (callback) {
+                callback();
+            }
+        }
+
+        function checkForAllMatchesAndCascade(callback) {
+            checkForAllMatches(function () {
+                if (matchMade) {
+                    cascade(function () {
+                        createAndDropPiece(function () {
+                            checkForAllMatchesAndCascade();
+                        });
+                    });
+                }
+            });
+
+            if (callback) {
+                callback();
+            }
         }
 
         $(document).mouseup(function () {
@@ -163,10 +304,11 @@ angular.module('starter', ['ionic'])
             animating = true;
             thisPos = $(this).position();
             toPos = $(to).position();
-            $.when($(this).animate({
-                top: toPos.top,
-                left: toPos.left
-            }, 300),
+            $.when(
+                $(this).animate({
+                    top: toPos.top,
+                    left: toPos.left
+                }, 300),
                 $(to).animate({
                     top: thisPos.top,
                     left: thisPos.left
@@ -174,6 +316,7 @@ angular.module('starter', ['ionic'])
                     tempID = $(this)[0].attr('id');
                     $(this)[0].attr('id', $(this)[1].attr('id'));
                     $(this)[1].attr('id', tempID);
+
                     if (callback) {
                         callback();
                     }
