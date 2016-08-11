@@ -90,11 +90,13 @@ angular.module('starter', ['ionic'])
 
             $(piece).mousedown(function () {
                 // Show start dragged position of image.
-                selectedPiece = $(this);
+                if(!animating){
+                    selectedPiece = $(this);
+                }                
             });
             $(piece).mouseenter(function () {
                
-                if (selectedPiece && doPiecesTouch(selectedPiece, $(this), pieceSize)) {
+                if (!animating && selectedPiece && doPiecesTouch(selectedPiece, $(this), pieceSize)) {
                     selectedPiece.swapWith($(this), function () {
                         checkMatches(getPieceObject(selectedPiece), getPieceObject(swappedPiece), function () {
                             if (matchMade) {
